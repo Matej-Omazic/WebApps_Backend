@@ -1,6 +1,6 @@
 import express from 'express';
-import cors from 'cors';
 import storage from './storage.js';
+import cors from 'cors';
 
 const app = express(); // instanciranje aplikacije
 const port = 3000; // port na kojem će web server slušati
@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 app.listen(port, () => console.log(`Slušam na portu ${port}!`))
+
 
 
 
