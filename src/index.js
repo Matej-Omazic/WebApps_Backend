@@ -27,7 +27,20 @@ app.get('/user/:username', (req, res) => {
 
 
 //games
-app.get('/games', (req, res) => res.send(storage.games))
+app.get('/games', (req, res) => {
+    let name = req.query.name
+    
+    let back_games = storage.games
+    
+    
+    if (name) {
+        back_games = back_games.filter(e => {
+            return e.name.indexOf(name) >= 0
+        })
+    }
+    res.json(back_games)
+});
+
 
 app.get('/games/:id', (req, res) => {
     

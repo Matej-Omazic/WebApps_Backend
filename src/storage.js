@@ -24,7 +24,7 @@ let storage = {
                 name:"Grand Theft Auto V",
                 release_date:"17 September 2013",
                 genre:"Action, Adventure, Comedy",
-                rate:"97/100",
+                rate:"96/100",
                 writer:"Dan Houser, Rupert Humphries",
                 developer:"Rockstar Games",
                 publisher:"Rockstar Games",
