@@ -55,14 +55,14 @@ let storage = {
     comments:[
 
         {
-            comment: "Good Game",
+            comment: "One of the most highly anticipated games we have seen ever and it has not disappointed. I have been a fan since the very first GTA entered my console a number of years ago and have played them ever since with great enjoyment and GTA 5 just tops the rest.",
             game_id: "1001",
             author: "GoodGuy"
 
         },
 
         {
-            comment: "Bad Game",
+            comment: "Okay so the campaign is fine in fact it's great but the online is so broken and so toxic it's unbelievable I've sold this game once and I might do it again it's so laggy and broken I'm done with it.",
             game_id: "1002",
             author: "NotSoGoodGuy"
         },
