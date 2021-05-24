@@ -1,6 +1,7 @@
 import express from 'express';
 import storage from './storage.js';
 import cors from 'cors';
+import connect from './database.js'
 
 const app = express(); // instanciranje aplikacije
 const port = 3000; // port na kojem će web server slušati
@@ -25,8 +26,22 @@ app.get('/user/:username', (req, res) => {
 });
 
 
+    app.get('/games', async (req, res) =>{
+    let db = await connect()
+
+    let cursor = await db.collection("games").find()
+    let results = await cursor.toArray()
+
+    console.log(results)
+
+    res.json(results)
+
+    
+})
+
 
 //games
+/**
 app.get('/games', (req, res) => {
     let name = req.query.name
     
@@ -40,7 +55,7 @@ app.get('/games', (req, res) => {
     }
     res.json(back_games)
 });
-
+*/
 
 app.get('/games/:id', (req, res) => {
     
