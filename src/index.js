@@ -25,14 +25,23 @@ app.get('/user/:username', (req, res) => {
 
 });
 
-
-    app.get('/games', async (req, res) =>{
+//games
+app.get('/games', async (req, res) =>{
     let db = await connect()
+    let query = req.query;
 
-    let cursor = await db.collection("games").find()
+    let selekcija = {}
+    
+    if(query.name){
+        selekcija.name = new RegExp(query.name) 
+    }
+
+    console.log("selekcija", selekcija)
+    
+    let cursor = await db.collection("games").find(selekcija)
     let results = await cursor.toArray()
 
-    console.log(results)
+    
 
     res.json(results)
 
