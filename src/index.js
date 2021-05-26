@@ -2,6 +2,7 @@ import express from 'express';
 import storage from './storage.js';
 import cors from 'cors';
 import connect from './database.js'
+import mongo from 'mongodb'
 
 const app = express(); // instanciranje aplikacije
 const port = 3000; // port na kojem će web server slušati
@@ -25,16 +26,48 @@ app.get('/user/:username', (req, res) => {
 
 });
 
+
+app.get('/games/:id', async (req, res) =>{
+    let id = req.params.id;
+    let db = await connect();
+
+    let doc = await db.collection("games").findOne({_id: mongo.ObjectId(id)})
+    //console.log(doc)
+    res.json(doc);
+})
+
 //games
 app.get('/games', async (req, res) =>{
     let db = await connect()
     let query = req.query;
 
     let selekcija = {}
+
     
     if(query.name){
-        selekcija.name = new RegExp(query.name) 
+        selekcija.name = new RegExp(query.name)
     }
+
+    if (query.name2){
+        let pretraga = query.name2
+        let terms = pretraga.split(' ')
+
+        selekcija = {
+            $and: []
+        };
+
+
+        terms.forEach((term) =>{
+            console.log("unutar petelje", term);
+            let or = {
+                $or: [ {name:new RegExp(term)}, {genre:new RegExp(term) }]
+            }
+
+            selekcija.$and.push(or)
+        })
+    }
+
+   
 
     console.log("selekcija", selekcija)
     
