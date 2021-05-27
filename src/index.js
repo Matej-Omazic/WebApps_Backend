@@ -98,6 +98,55 @@ app.get('/games', (req, res) => {
     res.json(back_games)
 });
 */
+app.get('/GtaV', async (req, res) =>{
+    let db = await connect()
+    
+    let cursor = await db.collection("comments").find() 
+    let results = await cursor.toArray()
+    res.json(results)
+    
+})
+app.post('/GtaV', async (req,res)=>{
+    let data = req.body;
+
+    delete data._id;
+
+    let db = await connect();
+    let result = await db.collection("comments").insertOne(data)
+    
+    if(result && result.insertedCount == 1){
+        res.json(result.ops[0])
+    }
+    else{
+        res.json({
+            status: "fail"
+        });
+    }
+    
+})
+app.patch('/GtaV/:id', async(req,res)=>{
+    let id = req.params.id;
+    let data = req.body;
+    
+    let db = await connect ()
+    let result = await db.collection("comments").updateOne(
+        {_id: mongo.ObjectID(id)},
+        {
+            $set:data
+        }
+    )
+    if(result && result.modifiedCount == 1){
+        let doc = await db.collection("comments").findOne({
+            _id:mongo.ObjectID(id)
+        })
+        res.json(doc)
+    }
+    else{
+        res.json({status:"fail"})
+    }
+
+})
+
 
 app.get('/games/:id', (req, res) => {
     
