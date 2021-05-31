@@ -21,10 +21,13 @@ app.get('/user', (req, res) => res.send(storage.user))
 app.get('/user/:username', (req, res) => {
     
     let username  = req.params.username
-    console.log("Trazena je igra pod ID", username);
+    console.log("Trazena je user pod ID", username);
     res.json(storage.user.filter((x) => x.nickname == username));
 
 });
+
+
+
 
 
 app.get('/games/:id', async (req, res) =>{
@@ -32,8 +35,7 @@ app.get('/games/:id', async (req, res) =>{
     let db = await connect();
 
     let doc = await db.collection("games").findOne({_id: mongo.ObjectId(id)})
-    //console.log(doc)
-    res.json(doc);
+    res.json(doc)
 })
 
 //games
@@ -58,7 +60,7 @@ app.get('/games', async (req, res) =>{
 
 
         terms.forEach((term) =>{
-            console.log("unutar petelje", term);
+            //console.log("unutar petelje", term);
             let or = {
                 $or: [ {name:new RegExp(term)}, {genre:new RegExp(term) }]
             }
@@ -69,7 +71,7 @@ app.get('/games', async (req, res) =>{
 
    
 
-    console.log("selekcija", selekcija)
+    //console.log("selekcija", selekcija)
     
     let cursor = await db.collection("games").find(selekcija)
     let results = await cursor.toArray()
@@ -101,11 +103,13 @@ app.get('/games', (req, res) => {
 app.get('/GtaV', async (req, res) =>{
     let db = await connect()
     
-    let cursor = await db.collection("comments").find() 
+    let cursor = await db.collection("comments").find({game_id: "1001"}) 
     let results = await cursor.toArray()
     res.json(results)
     
 })
+
+
 app.post('/GtaV', async (req,res)=>{
     let data = req.body;
 
@@ -124,6 +128,9 @@ app.post('/GtaV', async (req,res)=>{
     }
     
 })
+
+
+
 app.patch('/GtaV/:id', async(req,res)=>{
     let id = req.params.id;
     let data = req.body;
@@ -148,6 +155,45 @@ app.patch('/GtaV/:id', async(req,res)=>{
 })
 
 
+
+
+
+app.get('/Zelda', async (req, res) =>{
+    let db = await connect()
+    
+    let cursor = await db.collection("comments").find({game_id: "1002"}) 
+    let results = await cursor.toArray()
+    res.json(results)
+    
+})
+
+app.patch('/Zelda/:id', async(req,res)=>{
+    let id = req.params.id;
+    let data = req.body;
+    
+    let db = await connect ()
+    let result = await db.collection("comments").updateOne(
+        {_id: mongo.ObjectID(id)},
+        {
+            $set:data
+        }
+    )
+    if(result && result.modifiedCount == 1){
+        let doc = await db.collection("comments").findOne({
+            _id:mongo.ObjectID(id)
+        })
+        res.json(doc)
+    }
+    else{
+        res.json({status:"fail"})
+    }
+
+})
+
+
+
+/**
+ 
 app.get('/games/:id', (req, res) => {
     
     let id  = req.params.id
@@ -155,6 +201,8 @@ app.get('/games/:id', (req, res) => {
     res.json(storage.games.filter((x) => x.game_id == id));
 
 });
+
+*/
 
 
 
