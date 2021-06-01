@@ -100,6 +100,8 @@ app.get('/games', (req, res) => {
     res.json(back_games)
 });
 */
+
+//GTAV
 app.get('/GtaV', async (req, res) =>{
     let db = await connect()
     
@@ -155,9 +157,7 @@ app.patch('/GtaV/:id', async(req,res)=>{
 })
 
 
-
-
-
+//Zelda
 app.get('/Zelda', async (req, res) =>{
     let db = await connect()
     
@@ -167,30 +167,55 @@ app.get('/Zelda', async (req, res) =>{
     
 })
 
-app.patch('/Zelda/:id', async(req,res)=>{
-    let id = req.params.id;
+
+app.post('/Zelda', async (req,res)=>{
     let data = req.body;
+
+    delete data._id;
+
+    let db = await connect();
+    let result = await db.collection("comments").insertOne(data)
     
-    let db = await connect ()
-    let result = await db.collection("comments").updateOne(
-        {_id: mongo.ObjectID(id)},
-        {
-            $set:data
-        }
-    )
-    if(result && result.modifiedCount == 1){
-        let doc = await db.collection("comments").findOne({
-            _id:mongo.ObjectID(id)
-        })
-        res.json(doc)
+    if(result && result.insertedCount == 1){
+        res.json(result.ops[0])
     }
     else{
-        res.json({status:"fail"})
+        res.json({
+            status: "fail"
+        });
     }
+    
+})
 
+//It takes 2
+app.get('/It_takes_2', async (req, res) =>{
+    let db = await connect()
+    
+    let cursor = await db.collection("comments").find({game_id: "1003"}) 
+    let results = await cursor.toArray()
+    res.json(results)
+    
 })
 
 
+app.post('/It_takes_2', async (req,res)=>{
+    let data = req.body;
+
+    delete data._id;
+
+    let db = await connect();
+    let result = await db.collection("comments").insertOne(data)
+    
+    if(result && result.insertedCount == 1){
+        res.json(result.ops[0])
+    }
+    else{
+        res.json({
+            status: "fail"
+        });
+    }
+    
+})
 
 /**
  
@@ -207,6 +232,74 @@ app.get('/games/:id', (req, res) => {
 
 
 //comments
+app.get('/Playlist', async (req, res) =>{
+    let db = await connect()
+    
+    let cursor = await db.collection("playlist").find() 
+    let results = await cursor.toArray()
+    res.json(results)
+    
+})
+
+//GTAV
+app.post('/GtaVpl', async (req,res)=>{
+    let data = req.body;
+
+    delete data._id;
+
+    let db = await connect();
+    let result = await db.collection("playlist").insertOne(data)
+    
+    if(result && result.insertedCount == 1){
+        res.json(result.ops[0])
+    }
+    else{
+        res.json({
+            status: "fail"
+        });
+    }
+    
+})
+//Zelda
+app.post('/Zeldapl', async (req,res)=>{
+    let data = req.body;
+
+    delete data._id;
+
+    let db = await connect();
+    let result = await db.collection("playlist").insertOne(data)
+    
+    if(result && result.insertedCount == 1){
+        res.json(result.ops[0])
+    }
+    else{
+        res.json({
+            status: "fail"
+        });
+    }
+    
+})
+//It Takes 2
+app.post('/It_takes_2pl', async (req,res)=>{
+    let data = req.body;
+
+    delete data._id;
+
+    let db = await connect();
+    let result = await db.collection("playlist").insertOne(data)
+    
+    if(result && result.insertedCount == 1){
+        res.json(result.ops[0])
+    }
+    else{
+        res.json({
+            status: "fail"
+        });
+    }
+    
+})
+
+//ne
 app.post('/comments', (req, res) => {
     
     console.log("Dodbio sam post")

@@ -72,14 +72,14 @@ let storage = {
     playlist:[
 
         {
-            author: "GoodGuy",
-            game_id: "1001",
+            author: "",
+            game_id: "",
 
         },
 
         {
-            author: "NotSoGoodGuy",
-            game_id: "1002",
+            author: "",
+            game_id: "",
         },
 
     ]
