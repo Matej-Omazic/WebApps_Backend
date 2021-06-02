@@ -1,8 +1,12 @@
+import dotenv from "dotenv"
+dotenv.config();
+
 import express from 'express';
-import storage from './storage.js';
+import storage from './storage';
 import cors from 'cors';
-import connect from './database.js'
+import connect from './database'
 import mongo from 'mongodb'
+import auth from './auth'
 
 const app = express(); // instanciranje aplikacije
 const port = 3000; // port na kojem će web server slušati
@@ -15,21 +19,49 @@ app.listen(port, () => console.log(`Slušam na portu ${port}!`))
 
 
 
-//users
+//users------------------------------------------------------------------------------------------------------------------------------------------
 app.get('/user', (req, res) => res.send(storage.user))
 
-app.get('/user/:username', (req, res) => {
-    
-    let username  = req.params.username
-    console.log("Trazena je user pod ID", username);
-    res.json(storage.user.filter((x) => x.nickname == username));
 
+app.get('/tajna', [auth.verify], (req, res) => {
+ 
+    res.json({message: "Ovo je tajna " + req.jwt.username});
+
+})
+
+app.post('/auth', async (req, res) => {
+    let user = req.body;
+
+    try {
+        let result = await auth.authenticateUser(user.username, user.password);
+        res.json(result);
+    } catch (e) {
+        res.status(401).json({
+            error: e.message,
+        });
+    }
 });
 
+app.post('/users', async (req, res) => {
+    let user = req.body;
+
+    let id;
+    try {
+        id = await auth.registerUser(user);
+     }
+    catch(e){
+        res.status(500).json({error: e.message});
+    }
+
+
+    res.json({id: id})
+})
 
 
 
 
+
+//games----------------------------------------------------------------------------------
 app.get('/games/:id', async (req, res) =>{
     let id = req.params.id;
     let db = await connect();
@@ -38,7 +70,7 @@ app.get('/games/:id', async (req, res) =>{
     res.json(doc)
 })
 
-//games
+
 app.get('/games', async (req, res) =>{
     let db = await connect()
     let query = req.query;
@@ -101,7 +133,7 @@ app.get('/games', (req, res) => {
 });
 */
 
-//GTAV
+//GTAV COMMENTS--------------------------------------------------------------------------------------------------------
 app.get('/GtaV', async (req, res) =>{
     let db = await connect()
     
@@ -157,7 +189,7 @@ app.patch('/GtaV/:id', async(req,res)=>{
 })
 
 
-//Zelda
+//Zelda COMMENTS------------------------------------------------------------------------------------------------------------------------
 app.get('/Zelda', async (req, res) =>{
     let db = await connect()
     
@@ -187,7 +219,7 @@ app.post('/Zelda', async (req,res)=>{
     
 })
 
-//It takes 2
+//It takes 2 COMMENTS-------------------------------------------------------------------------------------------------------------------------
 app.get('/It_takes_2', async (req, res) =>{
     let db = await connect()
     
@@ -231,7 +263,7 @@ app.get('/games/:id', (req, res) => {
 
 
 
-//comments
+//playlist------------------------------------------------------------------------------------------------------------------------------------------------------------
 app.get('/Playlist', async (req, res) =>{
     let db = await connect()
     
@@ -241,7 +273,7 @@ app.get('/Playlist', async (req, res) =>{
     
 })
 
-//GTAV
+//GTAV PLAYLIST------------------------------------------------------------------------------------------------------------------------
 app.post('/GtaVpl', async (req,res)=>{
     let data = req.body;
 
@@ -260,7 +292,7 @@ app.post('/GtaVpl', async (req,res)=>{
     }
     
 })
-//Zelda
+//Zelda PLAYLIST------------------------------------------------------------------------------------------------------------------------
 app.post('/Zeldapl', async (req,res)=>{
     let data = req.body;
 
@@ -279,7 +311,7 @@ app.post('/Zeldapl', async (req,res)=>{
     }
     
 })
-//It Takes 2
+//It Takes 2 PLAYLIST------------------------------------------------------------------------------------------------------------------------
 app.post('/It_takes_2pl', async (req,res)=>{
     let data = req.body;
 
@@ -299,18 +331,6 @@ app.post('/It_takes_2pl', async (req,res)=>{
     
 })
 
-//ne
-app.post('/comments', (req, res) => {
-    
-    console.log("Dodbio sam post")
-    let doc = req.body;
-    console.log(doc)
-    storage.comments.push(doc)
-    res.send({ status: "OK"});
 
-});
 
 app.get('/comments', (req, res) => res.send(storage.comments))
-
-//playlist
-app.get('/playlist', (req, res) => res.send(storage.playlist))
