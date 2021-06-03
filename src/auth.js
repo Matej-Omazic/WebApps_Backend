@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken"
 
 (async () => {
     let db = await connect()
-    await db.collection('users').createIndex({username: 1}, {unique: true});
+    await db.collection('users').createIndex({email: 1}, {unique: true});
 })();
 
 export default {
@@ -13,7 +13,6 @@ export default {
         let db = await connect()
 
         let doc = {
-            username: userData.username,
             email: userData.email,
             password: await bcrypt.hash(userData.password, 8),
         };
@@ -32,9 +31,9 @@ export default {
     },
 
 
-    async authenticateUser(username, password) {
+    async authenticateUser(email, password) {
         let db = await connect();
-        let user = await db.collection('users').findOne({ username: username });
+        let user = await db.collection('users').findOne({ email: email});
 
         if (user && user.password && (await bcrypt.compare(password, user.password))) {
             delete user.password; // ne želimo u tokenu, token se sprema na klijentu
@@ -44,7 +43,7 @@ export default {
             });
             return {
                 token,
-                username: user.username,
+                email: user.email,
             };
         } else {
             throw new Error('Cannot authenticate');

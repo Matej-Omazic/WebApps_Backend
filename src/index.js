@@ -25,7 +25,7 @@ app.get('/user', (req, res) => res.send(storage.user))
 
 app.get('/tajna', [auth.verify], (req, res) => {
  
-    res.json({message: "Ovo je tajna " + req.jwt.username});
+    res.json({message: "Ovo je tajna " + req.jwt.email});
 
 })
 
@@ -33,7 +33,7 @@ app.post('/auth', async (req, res) => {
     let user = req.body;
 
     try {
-        let result = await auth.authenticateUser(user.username, user.password);
+        let result = await auth.authenticateUser(user.email, user.password);
         res.json(result);
     } catch (e) {
         res.status(401).json({
