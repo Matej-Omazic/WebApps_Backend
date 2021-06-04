@@ -14,6 +14,7 @@ export default {
 
         let doc = {
             email: userData.email,
+            username: userData.username,
             password: await bcrypt.hash(userData.password, 8),
         };
 
@@ -31,11 +32,11 @@ export default {
     },
 
 
-    async authenticateUser(email, password) {
+    async authenticateUser(email, password,) {
         let db = await connect();
         let user = await db.collection('users').findOne({ email: email});
 
-        if (user && user.password && (await bcrypt.compare(password, user.password))) {
+        if (user && user.password  && (await bcrypt.compare(password, user.password))) {
             delete user.password; // ne želimo u tokenu, token se sprema na klijentu
             let token = jwt.sign(user, process.env.JWT_SECRET, {
                 algorithm: 'HS512',
@@ -44,6 +45,7 @@ export default {
             return {
                 token,
                 email: user.email,
+                
             };
         } else {
             throw new Error('Cannot authenticate');

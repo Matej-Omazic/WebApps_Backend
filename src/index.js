@@ -36,7 +36,7 @@ app.post('/auth', async (req, res) => {
         let result = await auth.authenticateUser(user.email, user.password);
         res.json(result);
     } catch (e) {
-        res.status(401).json({
+       return res.status(401).json({
             error: e.message,
         });
     }
@@ -50,19 +50,26 @@ app.post('/users', async (req, res) => {
         id = await auth.registerUser(user);
      }
     catch(e){
-        res.status(500).json({error: e.message});
+       return res.status(500).json({error: e.message});
     }
 
 
     res.json({id: id})
 })
 
-
+app.get('/users', async (req, res) =>{
+    let db = await connect()
+    
+    let cursor = await db.collection("users").find() 
+    let results = await cursor.toArray()
+    res.json(results)
+    
+})
 
 
 
 //games----------------------------------------------------------------------------------
-app.get('/games/:id', async (req, res) =>{
+app.get('/games/:id', [auth.verify], async (req, res) =>{
     let id = req.params.id;
     let db = await connect();
 
@@ -71,7 +78,7 @@ app.get('/games/:id', async (req, res) =>{
 })
 
 
-app.get('/games', async (req, res) =>{
+app.get('/games',  [auth.verify], async (req, res) =>{
     let db = await connect()
     let query = req.query;
 
@@ -134,7 +141,27 @@ app.get('/games', (req, res) => {
 */
 
 //GTAV COMMENTS--------------------------------------------------------------------------------------------------------
-app.get('/GtaV', async (req, res) =>{
+app.post('/GtaV/:id', async (req, res) => {
+    let id = req.params.id;
+    let data = req.body;
+    
+    let db = await connect ()
+    let result = await db.collection("comments").deleteOne(
+        {_id: mongo.ObjectID(id)},
+    )
+    if(result && result.deletedCount == 1){
+        res.json({status: "izbrisano"})
+    }
+    else{
+        res.json({
+            status: "fail"
+        });
+    }
+    
+   
+
+});
+app.get('/GtaV',  [auth.verify], async (req, res) =>{
     let db = await connect()
     
     let cursor = await db.collection("comments").find({game_id: "1001"}) 
@@ -144,7 +171,7 @@ app.get('/GtaV', async (req, res) =>{
 })
 
 
-app.post('/GtaV', async (req,res)=>{
+app.post('/GtaV', [auth.verify],  async (req,res)=>{
     let data = req.body;
 
     delete data._id;
@@ -165,7 +192,7 @@ app.post('/GtaV', async (req,res)=>{
 
 
 
-app.patch('/GtaV/:id', async(req,res)=>{
+app.patch('/GtaV/:id', [auth.verify], async(req,res)=>{
     let id = req.params.id;
     let data = req.body;
     
@@ -190,7 +217,7 @@ app.patch('/GtaV/:id', async(req,res)=>{
 
 
 //Zelda COMMENTS------------------------------------------------------------------------------------------------------------------------
-app.get('/Zelda', async (req, res) =>{
+app.get('/Zelda',  [auth.verify], async (req, res) =>{
     let db = await connect()
     
     let cursor = await db.collection("comments").find({game_id: "1002"}) 
@@ -200,7 +227,7 @@ app.get('/Zelda', async (req, res) =>{
 })
 
 
-app.post('/Zelda', async (req,res)=>{
+app.post('/Zelda', [auth.verify], async (req,res)=>{
     let data = req.body;
 
     delete data._id;
@@ -220,7 +247,7 @@ app.post('/Zelda', async (req,res)=>{
 })
 
 //It takes 2 COMMENTS-------------------------------------------------------------------------------------------------------------------------
-app.get('/It_takes_2', async (req, res) =>{
+app.get('/It_takes_2', [auth.verify],async (req, res) =>{
     let db = await connect()
     
     let cursor = await db.collection("comments").find({game_id: "1003"}) 
@@ -230,7 +257,7 @@ app.get('/It_takes_2', async (req, res) =>{
 })
 
 
-app.post('/It_takes_2', async (req,res)=>{
+app.post('/It_takes_2', [auth.verify], async (req,res)=>{
     let data = req.body;
 
     delete data._id;
@@ -264,7 +291,7 @@ app.get('/games/:id', (req, res) => {
 
 
 //playlist------------------------------------------------------------------------------------------------------------------------------------------------------------
-app.get('/Playlist', async (req, res) =>{
+app.get('/Playlist', [auth.verify], async (req, res) =>{
     let db = await connect()
     
     let cursor = await db.collection("playlist").find() 
@@ -274,7 +301,7 @@ app.get('/Playlist', async (req, res) =>{
 })
 
 //GTAV PLAYLIST------------------------------------------------------------------------------------------------------------------------
-app.post('/GtaVpl', async (req,res)=>{
+app.post('/GtaVpl', [auth.verify], async (req,res)=>{
     let data = req.body;
 
     delete data._id;
@@ -293,7 +320,7 @@ app.post('/GtaVpl', async (req,res)=>{
     
 })
 //Zelda PLAYLIST------------------------------------------------------------------------------------------------------------------------
-app.post('/Zeldapl', async (req,res)=>{
+app.post('/Zeldapl', [auth.verify], async (req,res)=>{
     let data = req.body;
 
     delete data._id;
@@ -312,7 +339,7 @@ app.post('/Zeldapl', async (req,res)=>{
     
 })
 //It Takes 2 PLAYLIST------------------------------------------------------------------------------------------------------------------------
-app.post('/It_takes_2pl', async (req,res)=>{
+app.post('/It_takes_2pl', [auth.verify], async (req,res)=>{
     let data = req.body;
 
     delete data._id;
