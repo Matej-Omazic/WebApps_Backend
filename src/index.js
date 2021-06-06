@@ -1,12 +1,12 @@
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 dotenv.config();
 
-import express from 'express';
-import storage from './storage';
-import cors from 'cors';
-import connect from './database'
-import mongo from 'mongodb'
-import auth from './auth'
+import express from "express";
+import storage from "./storage";
+import cors from "cors";
+import connect from "./database";
+import mongo from "mongodb";
+import auth from "./auth";
 
 const app = express(); // instanciranje aplikacije
 const port = 3000; // port na kojem će web server slušati
@@ -14,114 +14,119 @@ const port = 3000; // port na kojem će web server slušati
 app.use(cors());
 app.use(express.json());
 
-app.listen(port, () => console.log(`Slušam na portu ${port}!`))
-
-
-
+app.listen(port, () => console.log(`Slušam na portu ${port}!`));
 
 //users------------------------------------------------------------------------------------------------------------------------------------------
-app.get('/user', (req, res) => res.send(storage.user))
+app.get("/user", (req, res) => res.send(storage.user));
 
-
-app.get('/tajna', [auth.verify], (req, res) => {
- 
-    res.json({message: "Ovo je tajna " + req.jwt.email});
-
-})
-
-app.post('/auth', async (req, res) => {
-    let user = req.body;
-
-    try {
-        let result = await auth.authenticateUser(user.email, user.password);
-        res.json(result);
-    } catch (e) {
-       return res.status(401).json({
-            error: e.message,
-        });
-    }
+app.get("/tajna", [auth.verify], (req, res) => {
+	res.json({ message: "Ovo je tajna " + req.jwt.email });
 });
 
-app.post('/users', async (req, res) => {
-    let user = req.body;
+app.post("/auth", async (req, res) => {
+	let user = req.body;
 
-    let id;
-    try {
-        id = await auth.registerUser(user);
-     }
-    catch(e){
-       return res.status(500).json({error: e.message});
-    }
+	try {
+		let result = await auth.authenticateUser(user.email, user.password);
+		res.json(result);
+	} catch (e) {
+		return res.status(401).json({
+			error: e.message,
+		});
+	}
+});
 
+app.post("/users", async (req, res) => {
+	let user = req.body;
 
-    res.json({id: id})
-})
+	let id;
+	try {
+		id = await auth.registerUser(user);
+	} catch (e) {
+		return res.status(500).json({ error: e.message });
+	}
 
-app.get('/users', async (req, res) =>{
-    let db = await connect()
-    
-    let cursor = await db.collection("users").find() 
-    let results = await cursor.toArray()
-    res.json(results)
-    
-})
+	res.json({ id: id });
+});
 
+app.get("/users", async (req, res) => {
+	let db = await connect();
 
+	let cursor = await db.collection("users").find();
+	let results = await cursor.toArray();
+	res.json(results);
+});
 
 //games----------------------------------------------------------------------------------
-app.get('/games/:id', [auth.verify], async (req, res) =>{
-    let id = req.params.id;
-    let db = await connect();
+app.get("/games/:id", [auth.verify], async (req, res) => {
+	let id = req.params.id;
+	let db = await connect();
 
-    let doc = await db.collection("games").findOne({_id: mongo.ObjectId(id)})
-    res.json(doc)
-})
+	let doc = await db.collection("games").findOne({ _id: mongo.ObjectId(id) });
+	res.json(doc);
+});
 
+app.get("/games", [auth.verify], async (req, res) => {
+	let db = await connect();
+	let query = req.query;
 
-app.get('/games',  [auth.verify], async (req, res) =>{
-    let db = await connect()
-    let query = req.query;
+	let selekcija = {};
 
-    let selekcija = {}
+	if (query.name) {
+		selekcija.name = new RegExp(query.name);
+	}
 
-    
-    if(query.name){
-        selekcija.name = new RegExp(query.name)
-    }
+	if (query.name2) {
+		let pretraga = query.name2;
+		let terms = pretraga.split(" ");
 
-    if (query.name2){
-        let pretraga = query.name2
-        let terms = pretraga.split(' ')
+		selekcija = {
+			$and: [],
+		};
 
-        selekcija = {
-            $and: []
-        };
+		terms.forEach((term) => {
+			//console.log("unutar petelje", term);
+			let or = {
+				$or: [{ name: new RegExp(term) }, { genre: new RegExp(term) }],
+			};
 
+			selekcija.$and.push(or);
+		});
+	}
 
-        terms.forEach((term) =>{
-            //console.log("unutar petelje", term);
-            let or = {
-                $or: [ {name:new RegExp(term)}, {genre:new RegExp(term) }]
-            }
+	//console.log("selekcija", selekcija)
 
-            selekcija.$and.push(or)
-        })
-    }
+	let cursor = await db.collection("games").find(selekcija);
+	let results = await cursor.toArray();
 
-   
+	res.json(results);
+});
 
-    //console.log("selekcija", selekcija)
-    
-    let cursor = await db.collection("games").find(selekcija)
-    let results = await cursor.toArray()
+app.get("/Playlist", [auth.verify], async (req, res) => {
+	let db = await connect();
 
-    
+	let cursor = await db.collection("playlist").find();
+	let results = await cursor.toArray();
+	res.json(results);
+});
 
-    res.json(results)
+//GTAV PLAYLIST------------------------------------------------------------------------------------------------------------------------
+app.post("/Playlist", [auth.verify], async (req, res) => {
+	let data = req.body;
 
-    
-})
+	delete data._id;
 
+	let db = await connect();
+	let result = await db.collection("playlist").insertOne(data);
+
+	if (result && result.insertedCount == 1) {
+		res.json(result.ops[0]);
+	} else {
+		res.json({
+			status: "fail",
+		});
+	}
+});
 
 //games
 /**
@@ -140,141 +145,94 @@ app.get('/games', (req, res) => {
 });
 */
 
-//GTAV COMMENTS--------------------------------------------------------------------------------------------------------
-app.post('/GtaV/:id', async (req, res) => {
-    let id = req.params.id;
-    let data = req.body;
-    
-    let db = await connect ()
-    let result = await db.collection("comments").deleteOne(
-        {_id: mongo.ObjectID(id)},
-    )
-    if(result && result.deletedCount == 1){
-        res.json({status: "izbrisano"})
-    }
-    else{
-        res.json({
-            status: "fail"
-        });
-    }
-    
-   
+//COMMENTS--------------------------------------------------------------------------------------------------------
+app.get("/comments/:game_id", [auth.verify], async (req, res) => {
+	let db = await connect();
+	let gameId = req.params.game_id;
 
+	let result = await db.collection("comments").find({ game_id: gameId });
+	let cursor = await result.toArray();
+	res.json(cursor);
 });
-app.get('/GtaV',  [auth.verify], async (req, res) =>{
-    let db = await connect()
-    
-    let cursor = await db.collection("comments").find({game_id: "1001"}) 
-    let results = await cursor.toArray()
-    res.json(results)
-    
-})
 
+app.post("/comments", [auth.verify], async (req, res) => {
+	let data = req.body;
 
-app.post('/GtaV', [auth.verify],  async (req,res)=>{
-    let data = req.body;
+	delete data._id;
 
-    delete data._id;
+	let db = await connect();
+	let result = await db.collection("comments").insertOne(data);
 
-    let db = await connect();
-    let result = await db.collection("comments").insertOne(data)
-    
-    if(result && result.insertedCount == 1){
-        res.json(result.ops[0])
-    }
-    else{
-        res.json({
-            status: "fail"
-        });
-    }
-    
-})
+	if (result && result.insertedCount == 1) {
+		res.json(result.ops[0]);
+	} else {
+		res.json({
+			status: "fail",
+		});
+	}
+});
 
+app.post("/GtaV/:id", async (req, res) => {
+	let id = req.params.id;
+	let data = req.body;
 
+	let db = await connect();
+	let result = await db
+		.collection("comments")
+		.deleteOne({ _id: mongo.ObjectID(id) });
+	if (result && result.deletedCount == 1) {
+		res.json({ status: "izbrisano" });
+	} else {
+		res.json({
+			status: "fail",
+		});
+	}
+});
+app.get("/GtaV", [auth.verify], async (req, res) => {
+	let db = await connect();
 
-app.patch('/GtaV/:id', [auth.verify], async(req,res)=>{
-    let id = req.params.id;
-    let data = req.body;
-    
-    let db = await connect ()
-    let result = await db.collection("comments").updateOne(
-        {_id: mongo.ObjectID(id)},
-        {
-            $set:data
-        }
-    )
-    if(result && result.modifiedCount == 1){
-        let doc = await db.collection("comments").findOne({
-            _id:mongo.ObjectID(id)
-        })
-        res.json(doc)
-    }
-    else{
-        res.json({status:"fail"})
-    }
+	let cursor = await db.collection("comments").find({ game_id: "1001" });
+	let results = await cursor.toArray();
+	res.json(results);
+});
 
-})
+app.post("/GtaV", [auth.verify], async (req, res) => {
+	let data = req.body;
 
+	delete data._id;
 
-//Zelda COMMENTS------------------------------------------------------------------------------------------------------------------------
-app.get('/Zelda',  [auth.verify], async (req, res) =>{
-    let db = await connect()
-    
-    let cursor = await db.collection("comments").find({game_id: "1002"}) 
-    let results = await cursor.toArray()
-    res.json(results)
-    
-})
+	let db = await connect();
+	let result = await db.collection("comments").insertOne(data);
 
+	if (result && result.insertedCount == 1) {
+		res.json(result.ops[0]);
+	} else {
+		res.json({
+			status: "fail",
+		});
+	}
+});
 
-app.post('/Zelda', [auth.verify], async (req,res)=>{
-    let data = req.body;
+app.patch("/GtaV/:id", [auth.verify], async (req, res) => {
+	let id = req.params.id;
+	let data = req.body;
 
-    delete data._id;
-
-    let db = await connect();
-    let result = await db.collection("comments").insertOne(data)
-    
-    if(result && result.insertedCount == 1){
-        res.json(result.ops[0])
-    }
-    else{
-        res.json({
-            status: "fail"
-        });
-    }
-    
-})
-
-//It takes 2 COMMENTS-------------------------------------------------------------------------------------------------------------------------
-app.get('/It_takes_2', [auth.verify],async (req, res) =>{
-    let db = await connect()
-    
-    let cursor = await db.collection("comments").find({game_id: "1003"}) 
-    let results = await cursor.toArray()
-    res.json(results)
-    
-})
-
-
-app.post('/It_takes_2', [auth.verify], async (req,res)=>{
-    let data = req.body;
-
-    delete data._id;
-
-    let db = await connect();
-    let result = await db.collection("comments").insertOne(data)
-    
-    if(result && result.insertedCount == 1){
-        res.json(result.ops[0])
-    }
-    else{
-        res.json({
-            status: "fail"
-        });
-    }
-    
-})
+	let db = await connect();
+	let result = await db.collection("comments").updateOne(
+		{ _id: mongo.ObjectID(id) },
+		{
+			$set: data,
+		}
+	);
+	if (result && result.modifiedCount == 1) {
+		let doc = await db.collection("comments").findOne({
+			_id: mongo.ObjectID(id),
+		});
+		res.json(doc);
+	} else {
+		res.json({ status: "fail" });
+	}
+});
 
 /**
  
@@ -288,76 +246,13 @@ app.get('/games/:id', (req, res) => {
 
 */
 
-
-
 //playlist------------------------------------------------------------------------------------------------------------------------------------------------------------
-app.get('/Playlist', [auth.verify], async (req, res) =>{
-    let db = await connect()
-    
-    let cursor = await db.collection("playlist").find() 
-    let results = await cursor.toArray()
-    res.json(results)
-    
-})
+app.get("/Playlist", [auth.verify], async (req, res) => {
+	let db = await connect();
 
-//GTAV PLAYLIST------------------------------------------------------------------------------------------------------------------------
-app.post('/GtaVpl', [auth.verify], async (req,res)=>{
-    let data = req.body;
+	let cursor = await db.collection("playlist").find();
+	let results = await cursor.toArray();
+	res.json(results);
+});
 
-    delete data._id;
-
-    let db = await connect();
-    let result = await db.collection("playlist").insertOne(data)
-    
-    if(result && result.insertedCount == 1){
-        res.json(result.ops[0])
-    }
-    else{
-        res.json({
-            status: "fail"
-        });
-    }
-    
-})
-//Zelda PLAYLIST------------------------------------------------------------------------------------------------------------------------
-app.post('/Zeldapl', [auth.verify], async (req,res)=>{
-    let data = req.body;
-
-    delete data._id;
-
-    let db = await connect();
-    let result = await db.collection("playlist").insertOne(data)
-    
-    if(result && result.insertedCount == 1){
-        res.json(result.ops[0])
-    }
-    else{
-        res.json({
-            status: "fail"
-        });
-    }
-    
-})
-//It Takes 2 PLAYLIST------------------------------------------------------------------------------------------------------------------------
-app.post('/It_takes_2pl', [auth.verify], async (req,res)=>{
-    let data = req.body;
-
-    delete data._id;
-
-    let db = await connect();
-    let result = await db.collection("playlist").insertOne(data)
-    
-    if(result && result.insertedCount == 1){
-        res.json(result.ops[0])
-    }
-    else{
-        res.json({
-            status: "fail"
-        });
-    }
-    
-})
-
-
-
-app.get('/comments', (req, res) => res.send(storage.comments))
+app.get("/comments", (req, res) => res.send(storage.comments));
