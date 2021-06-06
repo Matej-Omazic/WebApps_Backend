@@ -255,4 +255,19 @@ app.get("/Playlist", [auth.verify], async (req, res) => {
 	res.json(results);
 });
 
-app.get("/comments", (req, res) => res.send(storage.comments));
+app.post("/Contact", [auth.verify], async (req, res) => {
+	let data = req.body;
+
+	delete data._id;
+
+	let db = await connect();
+	let result = await db.collection("contact").insertOne(data);
+
+	if (result && result.insertedCount == 1) {
+		res.json(result.ops[0]);
+	} else {
+		res.json({
+			status: "fail",
+		});
+	}
+});
