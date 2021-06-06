@@ -247,10 +247,11 @@ app.get('/games/:id', (req, res) => {
 */
 
 //playlist------------------------------------------------------------------------------------------------------------------------------------------------------------
-app.get("/Playlist", [auth.verify], async (req, res) => {
+app.get("/Playlist/:author", [auth.verify], async (req, res) => {
 	let db = await connect();
+	let aut = req.params.author;
 
-	let cursor = await db.collection("playlist").find();
+	let cursor = await db.collection("playlist").find({ author: aut });
 	let results = await cursor.toArray();
 	res.json(results);
 });
