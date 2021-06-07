@@ -1,0 +1,14 @@
+---
+application:
+  name: "webapps-backend"
+  project: "GameDB"
+  organization: "QoveryCommunity"
+databases:
+- type: "MONGODB"
+  name: "gamedb"
+routers:
+- name: "main-webapps-backend"
+  routes:
+  - application_name: "webapps-backend"
+    paths:
+    - "/*"
