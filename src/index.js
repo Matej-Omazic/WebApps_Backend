@@ -19,23 +19,6 @@ app.listen(port, () => console.log(`Slušam na portu ${port}!`));
 //users------------------------------------------------------------------------------------------------------------------------------------------
 app.get("/user", (req, res) => res.send(storage.user));
 
-app.get("/tajna", [auth.verify], (req, res) => {
-	res.json({ message: "Ovo je tajna " + req.jwt.email });
-});
-
-app.post("/auth", async (req, res) => {
-	let user = req.body;
-
-	try {
-		let result = await auth.authenticateUser(user.email, user.password);
-		res.json(result);
-	} catch (e) {
-		return res.status(401).json({
-			error: e.message,
-		});
-	}
-});
-
 app.post("/users", async (req, res) => {
 	let user = req.body;
 
@@ -56,6 +39,34 @@ app.get("/users", async (req, res) => {
 	let results = await cursor.toArray();
 	res.json(results);
 });
+
+app.get("/users/:email", async (req, res) => {
+	let db = await connect();
+	let email = req.params.email
+
+	let results = await db.collection("users").findOne({email: email});
+	console.log(results)
+	res.json(results);
+});
+
+app.get("/tajna", [auth.verify], (req, res) => {
+	res.json({ message: "Ovo je tajna " + req.jwt.email });
+});
+
+app.post("/auth", async (req, res) => {
+	let user = req.body;
+
+	try {
+		let result = await auth.authenticateUser(user.email, user.password);
+		res.json(result);
+	} catch (e) {
+		return res.status(401).json({
+			error: e.message,
+		});
+	}
+});
+
+
 
 //games----------------------------------------------------------------------------------
 app.get("/games/:id", [auth.verify], async (req, res) => {
@@ -102,6 +113,24 @@ app.get("/games", [auth.verify], async (req, res) => {
 	res.json(results);
 });
 
+app.post("/games", [auth.verify], async (req, res) => {
+	let data = req.body;
+	
+	delete data._id;
+	
+	let db = await connect();
+	let result = await db.collection("games").insertOne(data);
+
+	if (result && result.insertedCount == 1) {
+		res.json(result.ops[0]);
+	} else {
+		res.json({
+			status: "fail",
+		});
+	}
+});
+
+//PLAYLIST------------------------------------------------------------------------------------------------------------------------
 app.get("/Playlist", [auth.verify], async (req, res) => {
 	let db = await connect();
 
@@ -110,7 +139,6 @@ app.get("/Playlist", [auth.verify], async (req, res) => {
 	res.json(results);
 });
 
-//GTAV PLAYLIST------------------------------------------------------------------------------------------------------------------------
 app.post("/Playlist", [auth.verify], async (req, res) => {
 	let data = req.body;
 
@@ -126,6 +154,15 @@ app.post("/Playlist", [auth.verify], async (req, res) => {
 			status: "fail",
 		});
 	}
+});
+
+app.get("/Playlist/:author", [auth.verify], async (req, res) => {
+	let db = await connect();
+	let aut = req.params.author;
+
+	let cursor = await db.collection("playlist").find({ author: aut });
+	let results = await cursor.toArray();
+	res.json(results);
 });
 
 //games
@@ -171,48 +208,7 @@ app.post("/comments", [auth.verify], async (req, res) => {
 		});
 	}
 });
-
-app.post("/GtaV/:id", async (req, res) => {
-	let id = req.params.id;
-	let data = req.body;
-
-	let db = await connect();
-	let result = await db
-		.collection("comments")
-		.deleteOne({ _id: mongo.ObjectID(id) });
-	if (result && result.deletedCount == 1) {
-		res.json({ status: "izbrisano" });
-	} else {
-		res.json({
-			status: "fail",
-		});
-	}
-});
-app.get("/GtaV", [auth.verify], async (req, res) => {
-	let db = await connect();
-
-	let cursor = await db.collection("comments").find({ game_id: "1001" });
-	let results = await cursor.toArray();
-	res.json(results);
-});
-
-app.post("/GtaV", [auth.verify], async (req, res) => {
-	let data = req.body;
-
-	delete data._id;
-
-	let db = await connect();
-	let result = await db.collection("comments").insertOne(data);
-
-	if (result && result.insertedCount == 1) {
-		res.json(result.ops[0]);
-	} else {
-		res.json({
-			status: "fail",
-		});
-	}
-});
-
+/**
 app.patch("/GtaV/:id", [auth.verify], async (req, res) => {
 	let id = req.params.id;
 	let data = req.body;
@@ -233,28 +229,7 @@ app.patch("/GtaV/:id", [auth.verify], async (req, res) => {
 		res.json({ status: "fail" });
 	}
 });
-
-/**
- 
-app.get('/games/:id', (req, res) => {
-    
-    let id  = req.params.id
-    console.log("Trazena je igra pod ID", id);
-    res.json(storage.games.filter((x) => x.game_id == id));
-
-});
-
 */
-
-//playlist------------------------------------------------------------------------------------------------------------------------------------------------------------
-app.get("/Playlist/:author", [auth.verify], async (req, res) => {
-	let db = await connect();
-	let aut = req.params.author;
-
-	let cursor = await db.collection("playlist").find({ author: aut });
-	let results = await cursor.toArray();
-	res.json(results);
-});
 
 app.post("/Contact", [auth.verify], async (req, res) => {
 	let data = req.body;
