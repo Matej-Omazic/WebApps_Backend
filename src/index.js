@@ -42,10 +42,10 @@ app.get("/users", async (req, res) => {
 
 app.get("/users/:email", async (req, res) => {
 	let db = await connect();
-	let email = req.params.email
+	let email = req.params.email;
 
-	let results = await db.collection("users").findOne({email: email});
-	console.log(results)
+	let results = await db.collection("users").findOne({ email: email });
+
 	res.json(results);
 });
 
@@ -65,8 +65,6 @@ app.post("/auth", async (req, res) => {
 		});
 	}
 });
-
-
 
 //games----------------------------------------------------------------------------------
 app.get("/games/:id", [auth.verify], async (req, res) => {
@@ -115,9 +113,9 @@ app.get("/games", [auth.verify], async (req, res) => {
 
 app.post("/games", [auth.verify], async (req, res) => {
 	let data = req.body;
-	
+
 	delete data._id;
-	
+
 	let db = await connect();
 	let result = await db.collection("games").insertOne(data);
 
@@ -163,6 +161,30 @@ app.get("/Playlist/:author", [auth.verify], async (req, res) => {
 	let cursor = await db.collection("playlist").find({ author: aut });
 	let results = await cursor.toArray();
 	res.json(results);
+});
+
+app.get("/Playlist_c/:game_id", [auth.verify], async (req, res) => {
+	let db = await connect();
+	let gameId = req.params.game_id;
+
+	let results = await db.collection("playlist").findOne({ game_id: gameId });
+	res.json(results);
+});
+
+app.post("/Playlist/delete/:game_name", [auth.verify], async (req, res) => {
+	let name = req.params.game_name;
+	console.log(name);
+
+	let db = await connect();
+	let result = await db.collection("playlist").deleteOne({ game_name: name });
+
+	if (result && result.deletedCount == 1) {
+		res.json(result.ops[0]);
+	} else {
+		res.json({
+			status: "fail",
+		});
+	}
 });
 
 //games
