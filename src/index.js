@@ -9,7 +9,7 @@ import mongo from "mongodb";
 import auth from "./auth";
 
 const app = express(); // instanciranje aplikacije
-const port = process.env.PORT || 3000; // port na kojem će web server slušati
+const port = 3000; // port na kojem će web server slušati
 
 app.use(cors());
 app.use(express.json());
