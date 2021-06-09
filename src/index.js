@@ -7,6 +7,8 @@ import cors from "cors";
 import connect from "./database";
 import mongo from "mongodb";
 import auth from "./auth";
+import a_auth from "./a_auth";
+
 
 const app = express(); // instanciranje aplikacije
 const port = 3000; // port na kojem će web server slušati
@@ -16,8 +18,55 @@ app.use(express.json());
 
 app.listen(port, () => console.log(`Slušam na portu ${port}!`));
 
+//admins------------------------------------------------------------------------------------------------------------------------------------------
+app.post("/admins", async (req, res) => {
+	let admin = req.body;
+
+	let id;
+	try {
+		id = await a_auth.registerUser(admin);
+	} catch (e) {
+		return res.status(500).json({ error: e.message });
+	}
+
+	res.json({ id: id });
+});
+
+app.get("/admins", async (req, res) => {
+	let db = await connect();
+
+	let cursor = await db.collection("admins").find();
+	let results = await cursor.toArray();
+	res.json(results);
+});
+
+app.get("/admins/:email", async (req, res) => {
+	let db = await connect();
+	let email = req.params.email;
+
+	let results = await db.collection("admins").findOne({ email: email });
+
+	res.json(results);
+});
+
+app.get("/tajna", (req, res) => {
+	res.json({ message: "Ovo je tajna " + req.jwt.email });
+});
+
+app.post("/a_auth", async (req, res) => {
+	let admin = req.body;
+
+	try {
+		let result = await a_auth.authenticateUser(admin.email, admin.password);
+		res.json(result);
+	} catch (e) {
+		return res.status(401).json({
+			error: e.message,
+		});
+	}
+});
+
 //users------------------------------------------------------------------------------------------------------------------------------------------
-app.get("/user", (req, res) => res.send(storage.user));
 
 app.post("/users", async (req, res) => {
 	let user = req.body;
@@ -75,7 +124,7 @@ app.get("/games/:id", [auth.verify], async (req, res) => {
 	res.json(doc);
 });
 
-app.get("/games", [auth.verify], async (req, res) => {
+app.get("/games", async (req, res) => {
 	let db = await connect();
 	let query = req.query;
 
@@ -129,7 +178,7 @@ app.post("/games", [auth.verify], async (req, res) => {
 });
 
 //PLAYLIST------------------------------------------------------------------------------------------------------------------------
-app.get("/Playlist", [auth.verify], async (req, res) => {
+app.get("/Playlist", async (req, res) => {
 	let db = await connect();
 
 	let cursor = await db.collection("playlist").find();
@@ -154,7 +203,7 @@ app.post("/Playlist", [auth.verify], async (req, res) => {
 	}
 });
 
-app.get("/Playlist/:author", [auth.verify], async (req, res) => {
+app.get("/Playlist/:author", async (req, res) => {
 	let db = await connect();
 	let aut = req.params.author;
 
