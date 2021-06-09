@@ -9,7 +9,6 @@ import mongo from "mongodb";
 import auth from "./auth";
 import a_auth from "./a_auth";
 
-
 const app = express(); // instanciranje aplikacije
 const port = 3000; // port na kojem će web server slušati
 
@@ -178,7 +177,7 @@ app.post("/games", [auth.verify], async (req, res) => {
 });
 
 //PLAYLIST------------------------------------------------------------------------------------------------------------------------
-app.get("/Playlist", async (req, res) => {
+app.get("/Playlist", [auth.verify], async (req, res) => {
 	let db = await connect();
 
 	let cursor = await db.collection("playlist").find();
@@ -203,7 +202,7 @@ app.post("/Playlist", [auth.verify], async (req, res) => {
 	}
 });
 
-app.get("/Playlist/:author", async (req, res) => {
+app.get("/Playlist/:author", [auth.verify], async (req, res) => {
 	let db = await connect();
 	let aut = req.params.author;
 
