@@ -79,6 +79,23 @@ app.post("/users", async (req, res) => {
 
 	res.json({ id: id });
 });
+app.patch("/users", [auth.verify], async (req, res) => {
+	let changes = req.body;
+	if (changes.new_password && changes.old_password) {
+		let result = await auth.changeUserPassword(
+			req.jwt.email,
+			changes.old_password,
+			changes.new_password
+		);
+		if (result) {
+			res.status(201).send();
+		} else {
+			res.status(500).json({ error: "cannot change password" });
+		}
+	} else {
+		res.status(400).json({ error: "unrecognized request" });
+	}
+});
 
 app.get("/users", async (req, res) => {
 	let db = await connect();
@@ -227,7 +244,7 @@ app.post("/Playlist/delete/:game_name", [auth.verify], async (req, res) => {
 	let result = await db.collection("playlist").deleteOne({ game_name: name });
 
 	if (result && result.deletedCount == 1) {
-		res.json(result.ops[0]);
+		res.json(result);
 	} else {
 		res.json({
 			status: "fail",
