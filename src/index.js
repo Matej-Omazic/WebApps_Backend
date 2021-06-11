@@ -2,12 +2,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
-import storage from "./storage";
 import cors from "cors";
-import connect from "./database";
+import connect from "./database.js";
 import mongo from "mongodb";
-import auth from "./auth";
-import a_auth from "./a_auth";
+import auth from "./auth.js";
+import a_auth from "./a_auth.js";
 
 const app = express(); // instanciranje aplikacije
 

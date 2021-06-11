@@ -1,5 +1,5 @@
 import mongo from "mongodb";
-import connect from "./database";
+import connect from "./database.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
