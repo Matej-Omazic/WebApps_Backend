@@ -10,12 +10,15 @@ import auth from "./auth";
 import a_auth from "./a_auth";
 
 const app = express(); // instanciranje aplikacije
-const port = 3000; // port na kojem će web server slušati
 
 app.use(cors());
 app.use(express.json());
 
-app.listen(port, () => console.log(`Slušam na portu ${port}!`));
+const port = process.env.PORT || 3000;
+
+app.listen(port, function () {
+  console.log("Server se slusa na portu", port);
+});
 
 //admins------------------------------------------------------------------------------------------------------------------------------------------
 app.post("/admins", async (req, res) => {
@@ -289,6 +292,22 @@ app.post("/comments", [auth.verify], async (req, res) => {
 
 	if (result && result.insertedCount == 1) {
 		res.json(result.ops[0]);
+	} else {
+		res.json({
+			status: "fail",
+		});
+	}
+});
+
+app.post("/comments/delete/:comment", [auth.verify], async (req, res) => {
+	let name = req.params.comment;
+	console.log(name);
+
+	let db = await connect();
+	let result = await db.collection("comments").deleteOne({ comment: name });
+
+	if (result && result.deletedCount == 1) {
+		res.json(result);
 	} else {
 		res.json({
 			status: "fail",
