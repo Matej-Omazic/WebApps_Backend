@@ -178,7 +178,7 @@ app.get("/games", async (req, res) => {
 	res.json(results);
 });
 
-app.post("/games", [auth.verify], async (req, res) => {
+app.post("/games",  async (req, res) => {
 	let data = req.body;
 
 	delete data._id;
