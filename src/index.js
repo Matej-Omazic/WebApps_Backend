@@ -13,10 +13,10 @@ const app = express(); // instanciranje aplikacije
 app.use(cors());
 app.use(express.json());
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3100;
 
 app.listen(port, function () {
-  console.log("Server se slusa na portu", port);
+	console.log("Server se slusa na portu", port);
 });
 
 //admins------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,6 +48,23 @@ app.get("/admins/:email", async (req, res) => {
 	let results = await db.collection("admins").findOne({ email: email });
 
 	res.json(results);
+});
+app.patch("/admins", [a_auth.verify], async (req, res) => {
+	let changes = req.body;
+	if (changes.new_password && changes.old_password) {
+		let result = await a_auth.changeUserPassword(
+			req.jwt.email,
+			changes.old_password,
+			changes.new_password
+		);
+		if (result) {
+			res.status(201).send();
+		} else {
+			res.status(500).json({ error: "cannot change password" });
+		}
+	} else {
+		res.status(400).json({ error: "unrecognized request" });
+	}
 });
 
 app.get("/tajna", (req, res) => {

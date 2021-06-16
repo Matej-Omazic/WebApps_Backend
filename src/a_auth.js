@@ -16,7 +16,7 @@ export default {
 			email: userData.email,
 			username: userData.username,
 			password: await bcrypt.hash(userData.password, 8),
-            admin: userData.admin
+			admin: userData.admin,
 		};
 
 		try {
@@ -51,6 +51,24 @@ export default {
 			};
 		} else {
 			throw new Error("Cannot authenticate");
+		}
+	},
+	async changeUserPassword(email, old_password, new_password) {
+		let db = await connect();
+		let user = await db.collection("admins").findOne({ email: email });
+		if (
+			user &&
+			user.password &&
+			(await bcrypt.compare(old_password, user.password))
+		) {
+			let new_password_hashed = await bcrypt.hash(new_password, 8);
+			let result = await db
+				.collection("admins")
+				.updateOne(
+					{ _id: user._id },
+					{ $set: { password: new_password_hashed } }
+				);
+			return result.modifiedCount == 1;
 		}
 	},
 
